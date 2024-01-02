@@ -15,7 +15,10 @@ import space.arim.libertybans.env.standalone.ConsoleAudienceToLogger;
 import space.arim.libertybans.env.standalone.StandaloneLauncher;
 import space.arim.omnibus.DefaultOmnibus;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Singleton
 public class LibertyWeb {
@@ -27,7 +30,13 @@ public class LibertyWeb {
     private final CommandDispatch commandDispatch;
 
     public LibertyWeb() {
-        Path dataFolder = Path.of(System.getProperty("user.dir") + "/LibertyBans/");
+        String dynamicPath = System.getProperty("user.dir") + "/LibertyBans/";
+        Path dataFolder = Files.exists(Path.of(dynamicPath))
+                ? Path.of(dynamicPath)
+                : Files.exists(Path.of(dynamicPath.toLowerCase()))
+                         ? Path.of(dynamicPath.toLowerCase())
+                         : Path.of(dynamicPath);
+
         consoleAudience = new ConsoleAudienceToLogger(LoggerFactory.getLogger(LibertyWeb.class));
 
         injector = new StandaloneLauncher(dataFolder, new DefaultOmnibus())
