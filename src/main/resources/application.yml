@@ -2,6 +2,16 @@ micronaut:
   server:
     port: ${server.port}
     host: ${server.host}
+    cors:
+      enabled: true
+    netty:
+      maxHeaderSize: 1024
+      worker:
+        threads: 4
+      parent:
+        threads: 4
+      childOptions:
+        autoRead: true
   router:
     static-resources:
       default:
