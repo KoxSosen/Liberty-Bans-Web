@@ -156,6 +156,10 @@ $(document).ready(function () {
                             operatorUuid = "console";
                         }
 
+                        if (victimUsername == "Unknown") {
+                            victimUuid = "Tw8t";
+                        }
+
                         const html = `
                         <div class="row align-items-center p-3 flex-nowrap">
                         ${line}
