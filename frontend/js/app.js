@@ -4,7 +4,7 @@ $(document).ready(function () {
     let morePages = true;
 
     async function getImagesAsync(url, operatorUUID, victimUUID) {
-        const [victimUUIDResponse, operatorUUIDResponse] = await Promise.all([
+        const [victimUUIDResponse, operatorUUIDResponse] = await Promise.allSettled([
             fetch(`${url}${victimUUID}`),
             fetch(`${url}${operatorUUID}`)
         ]);
@@ -108,8 +108,21 @@ $(document).ready(function () {
     });
 
     $('#pageCount').keypress(function(e) {
-        if (e.which == 13) {
-            let pageCountValue = $("#pageCount").val() * 1; // Weird way of turning a string into a number, don't ask me why. I'm tired.
+        if (e.which === 13) {
+            let pageCountValue;
+
+            // We can only use positive numbers, passing a negative value will cause
+            // an java.lang.IllegalArgumentException on the backend.
+            pageCountValue = Number("#pageCount");
+
+            // If this fails
+            if (isNaN(pageCountValue)) {
+                return false;
+            }
+
+            if (pageCountValue < 1) {
+                return false;
+            }
 
             if (typeof pageCountValue != 'number') {
                 return false;
@@ -119,7 +132,7 @@ $(document).ready(function () {
                 return false;
             }
 
-            if (pageCountValue == currentPage) {
+            if (pageCountValue === currentPage) {
                 return false;
             }
 
@@ -153,10 +166,10 @@ $(document).ready(function () {
                         let statusBadge;
                         let line;
                         let operatorUuid = punishment.operatorUuid;
-                        if (punishment.label == "Permanent") {
+                        if (punishment.label === "Permanent") {
                             line = '<div class="col-auto permanent-line"></div>';
                             statusBadge = '<span class="permanent fw-medium">Permanent</span>';
-                        } else if (punishment.label == "Active") {
+                        } else if (punishment.label === "Active") {
                             line = '<div class="col-auto active-line"></div>';
                             statusBadge = '<span class="active fw-medium">Active</span>';
                         } else {
@@ -164,12 +177,12 @@ $(document).ready(function () {
                             statusBadge = '<span class="expired fw-medium">Expired</span>';
                         }
 
-                        if (operatorUuid == '00000000-0000-0000-0000-000000000000') {
+                        if (operatorUuid === '00000000-0000-0000-0000-000000000000') {
                             operatorUuid = "console";
                         }
 
-                        var victimUUIDImgID = "punishment-victimuuid";
-                        var operatorUUIDImgID = "punishment-operatoruuid"
+                        const victimUUIDImgID = "punishment-victimuuid";
+                        const operatorUUIDImgID = "punishment-operatoruuid";
                         const html = `
                         <div class="row align-items-center p-3 flex-nowrap">
                         ${line}
@@ -200,8 +213,8 @@ $(document).ready(function () {
                         punishments.append(html);
 
                         getImagesAsync("https://visage.surgeplay.com/face/55/", operatorUuid, punishment.victimUuid).then(([victimBlob, operatorBlob]) => {
-                            document.getElementById(`${victimUUIDClass}`).src = window.URL.createObjectURL(victimBlob);
-                            document.getElementById(`${operatorUUIDClass}`).src = window.URL.createObjectURL(operatorBlob);
+                            document.getElementById(`${victimUUIDImgID}`).src = window.URL.createObjectURL(victimBlob);
+                            document.getElementById(`${operatorUUIDImgID}`).src = window.URL.createObjectURL(operatorBlob);
                         }).catch(error => {
                             console.log(error);
                         });
