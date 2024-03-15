@@ -3,6 +3,18 @@ $(document).ready(function () {
     let currentType = 'ban';
     let morePages = true;
 
+    async function getImagesAsync(url, operatorUUID, victimUUID) {
+        const [victimUUIDResponse, operatorUUIDResponse] = await Promise.all([
+            fetch(`${url}${victimUUID}`),
+            fetch(`${url}${operatorUUID}`)
+        ]);
+
+        const victimBlob = await victimUUIDResponse.blob();
+        const operatorBlob = await operatorUUIDResponse.blob();
+
+        return [victimBlob, operatorBlob];
+    }
+
     function fetchTypeStats(type) {
         const typeStats = $("#type-stats");
         let typeText = "Bans";
@@ -156,22 +168,20 @@ $(document).ready(function () {
                             operatorUuid = "console";
                         }
 
-                        if (victimUsername == "Unknown") {
-                            victimUuid = "Tw8t";
-                        }
-
+                        var victimUUIDImgID = "punishment-victimuuid";
+                        var operatorUUIDImgID = "punishment-operatoruuid"
                         const html = `
                         <div class="row align-items-center p-3 flex-nowrap">
                         ${line}
                         <div class="col-auto">
-                        <img src="https://visage.surgeplay.com/face/55/${punishment.victimUuid}">
+                        <img id="${victimUUIDImgID}" src="../images/Tw8t.png">
                         </div>
                         <div class="col">
                         <p class="fs-5 mb-0">Offender</p>
                         <p>${punishment.victimUsername}</p>
                         </div>
                         <div class="col-auto">
-                        <img src="https://visage.surgeplay.com/face/55/${operatorUuid}">
+                        <img id="${operatorUUIDImgID}" src="../images/Tw8t.png">
                         </div>
                         <div class="col">
                         <p class="fs-5 mb-0">Staff</p>
@@ -188,6 +198,13 @@ $(document).ready(function () {
                         </div>
                         `;
                         punishments.append(html);
+
+                        getImagesAsync("https://visage.surgeplay.com/face/55/", operatorUuid, punishment.victimUuid).then(([victimBlob, operatorBlob]) => {
+                            document.getElementById(`${victimUUIDClass}`).src = window.URL.createObjectURL(victimBlob);
+                            document.getElementById(`${operatorUUIDClass}`).src = window.URL.createObjectURL(operatorBlob);
+                        }).catch(error => {
+                            console.log(error);
+                        });
                     });
                 } else {
                     const html = `<div class="text-center p-5"> <p class="fw-medium fs-5 mb-0">Nothing to show for now</p></div>`;
