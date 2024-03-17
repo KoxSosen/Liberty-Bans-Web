@@ -13,6 +13,7 @@ ready(() => {
         let typeText = "Bans";
 
         fetch(`/stats/${type}`)
+            .then(data => data.json())
             .then(data => {
                 switch (type) {
                     case "ban":
@@ -32,8 +33,9 @@ ready(() => {
                         break;
                 }
 
-                let text = document.createTextNode(`${typeText} <span class="fs-2">(${data.stats})</span>`);
-                typeStats.appendChild(text);
+                typeStats.textContent = `${typeText} <span class="fs-2">(${data.stats})</span>`;
+                //let text = document.createElement(`${typeText} <span class="fs-2">(${data.stats})</span>`);
+                // typeStats.appendChild(text);
 
             }).catch(error => {
                 console.error("Error retrieving type stats");
@@ -70,7 +72,7 @@ ready(() => {
         currentType = 'ban';
         fetchPunishments(currentType, currentPage);
         removeActiveClass();
-        document.querySelector('#banType').parentElement.add('navbar-active');
+        document.querySelector('#banType').parentElement.classList.add('navbar-active');
     });
 
     document.querySelector('#kickType').addEventListener('click', () => {
@@ -78,7 +80,7 @@ ready(() => {
         currentType = 'kick';
         fetchPunishments(currentType, currentPage);
         removeActiveClass();
-        document.querySelector('#kickType').parentElement.add('navbar-active');
+        document.querySelector('#kickType').parentElement.classList.add('navbar-active');
     });
 
     document.querySelector('#muteType').addEventListener('click', () => {
@@ -86,7 +88,7 @@ ready(() => {
         currentType = 'mute';
         fetchPunishments(currentType, currentPage);
         removeActiveClass();
-        document.querySelector('#muteType').parentElement.add('navbar-active');
+        document.querySelector('#muteType').parentElement.classList.add('navbar-active');
     });
 
     document.querySelector('#warnType').addEventListener('click', () => {
@@ -94,7 +96,7 @@ ready(() => {
         currentType = 'warn';
         fetchPunishments(currentType, currentPage);
         removeActiveClass();
-        document.querySelector('#warnType').parent().add('navbar-active');
+        document.querySelector('#warnType').parent().classList.add('navbar-active');
     });
 
     document.querySelector('#pageCount').addEventListener('keyup', function() {
@@ -127,6 +129,11 @@ ready(() => {
             return false;
     });
 
+    async function asyncFetchPunishments(type, page){
+        const response = await fetch("/punishments/" + type + "/" + page);
+        return await response.json();
+    }
+
     function fetchPunishments(type, page) {
         const spinner = document.querySelector("#punishments-spinner");
         const punishmentsElement = document.querySelector("#punishments");
@@ -135,40 +142,37 @@ ready(() => {
         punishmentsElement.style.display = "none";
         spinner.style.display = "block";
 
-        fetch("/punishments/" + type + "/" + page)
-            .then((response) => response.json())
-            .then((data) => console.log(data))
-            .then((data) => {
-                fetchTypeStats(type);
-                updatePageCount();
+        asyncFetchPunishments(type, page).then(data => {
+            fetchTypeStats(type);
+            updatePageCount();
 
-                // .empty() equivalent
-                punishmentsElement.textContent = '';
+            // .empty() equivalent
+            punishmentsElement.textContent = '';
 
-                if (!data.ok) {
-                    morePages = data.morePages;
+            if (data != null) {
+                morePages = data.morePages;
 
-                    for (const punishment of data.punishments) {
-                        let statusBadge;
-                        let line;
-                        let operatorUuid = punishment.operatorUuid;
+                for (const punishment of data.punishments) {
+                    let statusBadge;
+                    let line;
+                    let operatorUuid = punishment.operatorUuid;
 
-                        if (punishment.label === "Permanent") {
-                            line = '<div class="col-auto permanent-line"></div>';
-                            statusBadge = '<span class="permanent fw-medium">Permanent</span>';
-                        } else if (punishment.label === "Active") {
-                            line = '<div class="col-auto active-line"></div>';
-                            statusBadge = '<span class="active fw-medium">Active</span>';
-                        } else {
-                            line = '<div class="col-auto expired-line"></div>';
-                            statusBadge = '<span class="expired fw-medium">Expired</span>';
-                        }
+                    if (punishment.label === "Permanent") {
+                        line = '<div class="col-auto permanent-line"></div>';
+                        statusBadge = '<span class="permanent fw-medium">Permanent</span>';
+                    } else if (punishment.label === "Active") {
+                        line = '<div class="col-auto active-line"></div>';
+                        statusBadge = '<span class="active fw-medium">Active</span>';
+                    } else {
+                        line = '<div class="col-auto expired-line"></div>';
+                        statusBadge = '<span class="expired fw-medium">Expired</span>';
+                    }
 
-                        if (operatorUuid === '00000000-0000-0000-0000-000000000000') {
-                            operatorUuid = "console";
-                        }
+                    if (operatorUuid === '00000000-0000-0000-0000-000000000000') {
+                        operatorUuid = "console";
+                    }
 
-                        const html = `
+                    const html = `
                         <div class="row align-items-center p-3 flex-nowrap">
                         ${line}
                         <div class="col-auto">
@@ -195,33 +199,38 @@ ready(() => {
                         ${line}
                         </div>
                         `;
-                        punishmentsElement.append(html);
+                    let el = document.createElement("div");
+                    el.appendChild(document.createTextNode(html));
+                    document.getElementById(punishmentsElement.id).appendChild(el);
+                }
+            } else {
+                const html = `<div class="text-center p-5"> <p class="fw-medium fs-5 mb-0">Nothing to show for now</p></div>`;
+                let el = document.createElement("div");
+                el.appendChild(document.createTextNode(html));
+                document.getElementById(punishmentsElement.id).appendChild(el);
+            }
+            if (!morePages) {
+                document.querySelector('#nextBtn').setAttribute('disabled', 'true');
+                document.querySelector('#nextBtn').classList.add('disabled-btn');
+            } else {
+                document.querySelector('#nextBtn').setAttribute('disabled', 'true');
+                document.querySelector('#nextBtn').classList.remove('disabled-btn');
+            }
 
-                        spinner.style.display = "none";
-                        punishmentsElement.style.display = "block";
-                    }
-                } else {
-                    const html = `<div class="text-center p-5"> <p class="fw-medium fs-5 mb-0">Nothing to show for now</p></div>`;
-                    punishmentsElement.append(html);
-                }
-                if (!morePages) {
-                    document.querySelector('#nextBtn').setProperty('disabled', true);
-                    document.querySelector('#nextBtn').classList.add('disabled-btn');
-                } else {
-                    document.querySelector('#nextBtn').setProperty('disabled', false);
-                    document.querySelector('#nextBtn').classList.remove('disabled-btn');
-                }
-
-                if (currentPage <= 1) {
-                    document.querySelector('#prevBtn').setProperty('disabled', true);
-                    document.querySelector('#prevBtn').classList.add('disabled-btn');
-                } else {
-                    document.querySelector('#prevBtn').setProperty('disabled', false);
-                    document.querySelector('#prevBtn').classList.remove('disabled-btn');
-                }
-            }).catch(error => {
-                console.log(error);
-                console.log("Error retrieving punishment history");
+            if (currentPage <= 1) {
+                document.querySelector('#prevBtn').setAttribute('disabled', 'true');
+                document.querySelector('#prevBtn').classList.add('disabled-btn');
+            } else {
+                document.querySelector('#prevBtn').setAttribute('disabled', 'true');
+                document.querySelector('#prevBtn').classList.remove('disabled-btn');
+            }
+            spinner.style.display = "none";
+            punishmentsElement.style.display = "block";
+        }).catch(error => {
+            console.log(error);
+            console.log("Error retrieving punishment history");
         });
+
+
     }
 });
