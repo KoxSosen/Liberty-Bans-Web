@@ -1,17 +1,19 @@
-$(document).ready(function () {
+let ready = (callback) => {
+    if (document.readyState !== "loading") callback();
+    else document.addEventListener("DOMContentLoaded", callback);
+};
+
+ready(() => {
     let currentPage = 1;
     let currentType = 'ban';
     let morePages = true;
 
     function fetchTypeStats(type) {
-        const typeStats = $("#type-stats");
+        const typeStats = document.querySelector("#type-stats");
         let typeText = "Bans";
 
-        $.ajax({
-            url: `/stats/${type}`,
-            method: "GET",
-            success: function(response) {
-
+        fetch(`/stats/${type}`)
+            .then(data => {
                 switch (type) {
                     case "ban":
                         typeText = "Bans";
@@ -30,76 +32,85 @@ $(document).ready(function () {
                         break;
                 }
 
-                typeStats.html(`${typeText} <span class="fs-2">(${response.stats})</span>`);
+                let text = document.createTextNode(`${typeText} <span class="fs-2">(${data.stats})</span>`);
+                typeStats.appendChild(text);
 
-            },
-            error: function() {
+            }).catch(error => {
                 console.error("Error retrieving type stats");
-            }
-        })
+                console.error(error);
+        });
     }
 
     function updatePageCount() {
-        const pageCount = $("#pageCount");
-        pageCount.val(currentPage);
+        const pageCount = document.querySelector("#pageCount");
+        pageCount.value = currentPage;
     }
 
     function removeActiveClass() {
-        $('#banType').parent().removeClass('navbar-active');
-        $('#kickType').parent().removeClass('navbar-active');
-        $('#muteType').parent().removeClass('navbar-active');
-        $('#warnType').parent().removeClass('navbar-active');
+        document.querySelector('#banType').parentElement.classList.remove("navbar-active");
+        document.querySelector('#kickType').parentElement.classList.remove('navbar-active');
+        document.querySelector('#muteType').parentElement.classList.remove('navbar-active');
+        document.querySelector('#warnType').parentElement.classList.remove('navbar-active');
     }
 
     fetchPunishments(currentType, currentPage);
 
-    $('#nextBtn').click(function() {
+    document.querySelector('#nextBtn').addEventListener('click', () => {
         currentPage++;
         fetchPunishments(currentType, currentPage);
     });
 
-    $('#prevBtn').click(function() {
+    document.querySelector('#prevBtn').addEventListener('click', () => {
         currentPage--;
         fetchPunishments(currentType, currentPage);
     });
 
-    $('#banType').click(function() {
+    document.querySelector('#banType').addEventListener('click', () => {
         currentPage = 1;
         currentType = 'ban';
         fetchPunishments(currentType, currentPage);
         removeActiveClass();
-        $('#banType').parent().addClass('navbar-active');
+        document.querySelector('#banType').parentElement.add('navbar-active');
     });
 
-    $('#kickType').click(function() {
+    document.querySelector('#kickType').addEventListener('click', () => {
         currentPage = 1;
         currentType = 'kick';
         fetchPunishments(currentType, currentPage);
         removeActiveClass();
-        $('#kickType').parent().addClass('navbar-active');
+        document.querySelector('#kickType').parentElement.add('navbar-active');
     });
 
-    $('#muteType').click(function() {
+    document.querySelector('#muteType').addEventListener('click', () => {
         currentPage = 1;
         currentType = 'mute';
         fetchPunishments(currentType, currentPage);
         removeActiveClass();
-        $('#muteType').parent().addClass('navbar-active');
+        document.querySelector('#muteType').parentElement.add('navbar-active');
     });
 
-    $('#warnType').click(function() {
+    document.querySelector('#warnType').addEventListener('click', () => {
         currentPage = 1;
         currentType = 'warn';
         fetchPunishments(currentType, currentPage);
         removeActiveClass();
-        $('#warnType').parent().addClass('navbar-active');
+        document.querySelector('#warnType').parent().add('navbar-active');
     });
 
-    $('#pageCount').keypress(function(e) {
-        if (e.which == 13) {
-            let pageCountValue = $("#pageCount").val() * 1; // Weird way of turning a string into a number, don't ask me why. I'm tired.
+    document.querySelector('#pageCount').addEventListener('keyup', function() {
+            let pageCountValue = Number(document.querySelector("#pageCount"));
 
+            if (isNaN(pageCountValue)) {
+                return false;
+            }
+
+            // The previous call should ensure that the pageCountValue variable is a number
+            // but leaving this here for safety.
             if (typeof pageCountValue != 'number') {
+                return false;
+            }
+
+            if (pageCountValue < 1) {
                 return false;
             }
 
@@ -107,44 +118,45 @@ $(document).ready(function () {
                 return false;
             }
 
-            if (pageCountValue == currentPage) {
+            if (pageCountValue === currentPage) {
                 return false;
             }
 
             currentPage = pageCountValue;
             fetchPunishments(currentType, currentPage);
             return false;
-        }
     });
 
     function fetchPunishments(type, page) {
-        const spinner = $("#punishments-spinner");
-        const punishments = $("#punishments");
+        const spinner = document.querySelector("#punishments-spinner");
+        const punishmentsElement = document.querySelector("#punishments");
 
-        $.ajax({
-            url: "/punishments/" + type + "/" + page,
-            method: "GET",
-            beforeSend: function() {
-                spinner.show();
-                punishments.hide();
-            },
-            success: function(response) {
+        // Hide punishments using CSS.
+        punishmentsElement.style.display = "none";
+        spinner.style.display = "block";
+
+        fetch("/punishments/" + type + "/" + page)
+            .then((response) => response.json())
+            .then((data) => console.log(data))
+            .then((data) => {
                 fetchTypeStats(type);
                 updatePageCount();
 
-                punishments.empty();
+                // .empty() equivalent
+                punishmentsElement.textContent = '';
 
-                if (response.punishments != null) {
-                    morePages = response.morePages;
+                if (!data.ok) {
+                    morePages = data.morePages;
 
-                    response.punishments.forEach(function(punishment) {
+                    for (const punishment of data.punishments) {
                         let statusBadge;
                         let line;
                         let operatorUuid = punishment.operatorUuid;
-                        if (punishment.label == "Permanent") {
+
+                        if (punishment.label === "Permanent") {
                             line = '<div class="col-auto permanent-line"></div>';
                             statusBadge = '<span class="permanent fw-medium">Permanent</span>';
-                        } else if (punishment.label == "Active") {
+                        } else if (punishment.label === "Active") {
                             line = '<div class="col-auto active-line"></div>';
                             statusBadge = '<span class="active fw-medium">Active</span>';
                         } else {
@@ -152,7 +164,7 @@ $(document).ready(function () {
                             statusBadge = '<span class="expired fw-medium">Expired</span>';
                         }
 
-                        if (operatorUuid == '00000000-0000-0000-0000-000000000000') {
+                        if (operatorUuid === '00000000-0000-0000-0000-000000000000') {
                             operatorUuid = "console";
                         }
 
@@ -160,14 +172,14 @@ $(document).ready(function () {
                         <div class="row align-items-center p-3 flex-nowrap">
                         ${line}
                         <div class="col-auto">
-                        <img src="https://visage.surgeplay.com/face/55/${punishment.victimUuid}">
+                        <img src="https://visage.surgeplay.com/face/55/${punishment.victimUuid}" alt="punishment-victimUUID">
                         </div>
                         <div class="col">
                         <p class="fs-5 mb-0">Offender</p>
                         <p>${punishment.victimUsername}</p>
                         </div>
                         <div class="col-auto">
-                        <img src="https://visage.surgeplay.com/face/55/${operatorUuid}">
+                        <img src="https://visage.surgeplay.com/face/55/${operatorUuid}" alt="punishment-operatorUUID">
                         </div>
                         <div class="col">
                         <p class="fs-5 mb-0">Staff</p>
@@ -183,36 +195,33 @@ $(document).ready(function () {
                         ${line}
                         </div>
                         `;
-                        punishments.append(html);
-                    });
+                        punishmentsElement.append(html);
+
+                        spinner.style.display = "none";
+                        punishmentsElement.style.display = "block";
+                    }
                 } else {
                     const html = `<div class="text-center p-5"> <p class="fw-medium fs-5 mb-0">Nothing to show for now</p></div>`;
-                    punishments.append(html);
+                    punishmentsElement.append(html);
                 }
                 if (!morePages) {
-                    $('#nextBtn').prop('disabled', true);
-                    $('#nextBtn').addClass('disabled-btn');
+                    document.querySelector('#nextBtn').setProperty('disabled', true);
+                    document.querySelector('#nextBtn').classList.add('disabled-btn');
                 } else {
-                    $('#nextBtn').prop('disabled', false);
-                    $('#nextBtn').removeClass('disabled-btn');
+                    document.querySelector('#nextBtn').setProperty('disabled', false);
+                    document.querySelector('#nextBtn').classList.remove('disabled-btn');
                 }
 
                 if (currentPage <= 1) {
-                    $('#prevBtn').prop('disabled', true);
-                    $('#prevBtn').addClass('disabled-btn');
+                    document.querySelector('#prevBtn').setProperty('disabled', true);
+                    document.querySelector('#prevBtn').classList.add('disabled-btn');
                 } else {
-                    $('#prevBtn').prop('disabled', false);
-                    $('#prevBtn').removeClass('disabled-btn');
+                    document.querySelector('#prevBtn').setProperty('disabled', false);
+                    document.querySelector('#prevBtn').classList.remove('disabled-btn');
                 }
-            },
-            error: function() {
+            }).catch(error => {
+                console.log(error);
                 console.log("Error retrieving punishment history");
-            },
-            complete: function() {
-                spinner.hide();
-                punishments.show();
-            }
         });
     }
-
 });
