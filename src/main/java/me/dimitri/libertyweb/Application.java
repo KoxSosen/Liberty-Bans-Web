@@ -1,17 +1,38 @@
 package me.dimitri.libertyweb;
 
 import io.micronaut.runtime.Micronaut;
+import me.dimitri.libertyweb.utils.PlatformChecker;
 import me.dimitri.libertyweb.utils.StartupFiles;
 import me.dimitri.libertyweb.utils.exception.FileWorkerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.nio.file.Path;
 
 public class Application {
 
     private static final Logger log = LoggerFactory.getLogger(Application.class);
 
     public static void main(String[] args) {
-        StartupFiles startupFiles = new StartupFiles();
+        StartupFiles startupFiles;
+        PlatformChecker platformChecker = new PlatformChecker();
+
+        platformChecker.checkIfIsAMinecraftServer();
+
+        if (platformChecker.isAMinecraftServer()) {
+            Path resourcesPath = platformChecker.checkForResourcesFolder();
+            if (resourcesPath != null) {
+                startupFiles = new StartupFiles(resourcesPath);
+                startupFiles.createPlatformFolder();
+            } else {
+                log.info(" Detected a server platform, but unable to determine resources folder.");
+                log.info(" Starting normally, but the LibertyWeb resources may not be in the correct folder.");
+                startupFiles = new StartupFiles();
+            }
+        } else {
+            startupFiles = new StartupFiles();
+        }
+
         try {
             if (startupFiles.createConfig()) {
                 log.info(" config.yml created, please configure your Liberty Web application there");

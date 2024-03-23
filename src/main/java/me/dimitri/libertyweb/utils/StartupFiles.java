@@ -6,11 +6,13 @@ import net.lingala.zip4j.exception.ZipException;
 
 import java.io.*;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class StartupFiles {
-    private final File rootPath;
+    private final Path rootPath;
 
-    public StartupFiles(File rootPath) {
+    public StartupFiles(Path rootPath) {
 
         this.rootPath = rootPath;
     }
@@ -21,7 +23,7 @@ public class StartupFiles {
 
     public boolean createConfig() throws FileWorkerException {
         try {
-            File config = new File(rootPath, "config.yml");
+            File config = new File(rootPath.toFile(), "config.yml");
             if (config.createNewFile()) {
                 OutputStream outputStream = new FileOutputStream(config);
                 outputStream.write(getResource("config.yml").readAllBytes());
@@ -35,7 +37,7 @@ public class StartupFiles {
 
     public boolean createFrontend() throws FileWorkerException {
         try {
-            File frontend = new File(rootPath, "frontend");
+            File frontend = new File(rootPath.toFile(), "frontend");
             if (!frontend.isDirectory()) {
                 File frontendZip = new File("frontend.zip");
                 if (frontendZip.createNewFile()) {
@@ -49,6 +51,14 @@ public class StartupFiles {
             throw new FileWorkerException("Unable to create frontend files: ", e);
         }
         return false;
+    }
+
+    public void createPlatformFolder() throws FileWorkerException {
+        try {
+            Files.createDirectory(rootPath.resolve("/LibertyWeb"));
+        } catch (IOException e) {
+            throw new FileWorkerException("Unable to unzip " + file, e);
+        }
     }
 
     private void unzip(File file) throws FileWorkerException {
