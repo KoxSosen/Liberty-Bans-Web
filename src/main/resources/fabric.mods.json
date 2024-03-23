@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "liberty_web",
+  "version": "2.1.0",
+
+  "name": "LibertyWeb",
+  "description": "LibertyWeb provides a web interface for punishments given via the LibertyBans plugin.",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "me.dimitri.libertyweb.Application"
+    ]
+  },
+  "mixins": [
+    "modid.mixins.json"
+  ],
+
+  "requires": {
+    "fabricloader": ">=0.4.0",
+    "fabric": "*"
+  }
+}
