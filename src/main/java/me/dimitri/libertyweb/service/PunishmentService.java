@@ -3,11 +3,14 @@ package me.dimitri.libertyweb.service;
 import io.micronaut.cache.annotation.CacheConfig;
 import io.micronaut.cache.annotation.Cacheable;
 import jakarta.inject.Singleton;
+import me.dimitri.libertyweb.api.LibertyWeb;
 import me.dimitri.libertyweb.api.UsernameAPI;
 import me.dimitri.libertyweb.model.WebPunishment;
 import me.dimitri.libertyweb.model.response.WebPunishmentResponse;
 import me.dimitri.libertyweb.repository.PunishmentsRepository;
+import me.dimitri.libertyweb.utils.EnvironmentDataHolder;
 import space.arim.libertybans.api.PunishmentType;
+import space.arim.libertybans.core.LibertyBansApi;
 
 import java.util.List;
 
@@ -41,10 +44,14 @@ public class PunishmentService {
     }
 
     private void fixUsernames(List<WebPunishment> punishments) {
-        for (WebPunishment punishment : punishments) {
-            if (punishment.getVictimUsername().equals("Unknown")) {
-                String username = usernameAPI.usernameLookup(punishment.getVictimUuid());
-                punishment.setVictimUsername(username);
+        // Don't "fix" the username if it's offline mode.
+        // There is a chance it won't resolve to anything, leading to almost all of them being "offline".
+        if (!EnvironmentDataHolder.isOfflineMode()) {
+            for (WebPunishment punishment : punishments) {
+                if (punishment.getVictimUsername().equals("Unknown")) {
+                    String username = usernameAPI.usernameLookup(punishment.getVictimUuid());
+                    punishment.setVictimUsername(username);
+                }
             }
         }
     }

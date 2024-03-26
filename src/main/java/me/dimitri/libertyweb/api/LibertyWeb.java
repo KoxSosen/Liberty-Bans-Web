@@ -2,6 +2,7 @@ package me.dimitri.libertyweb.api;
 
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
+import me.dimitri.libertyweb.utils.EnvironmentDataHolder;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.text.Component;
 import org.slf4j.LoggerFactory;
@@ -9,6 +10,7 @@ import space.arim.injector.Injector;
 import space.arim.libertybans.api.LibertyBans;
 import space.arim.libertybans.bootstrap.BaseFoundation;
 import space.arim.libertybans.core.database.InternalDatabase;
+import space.arim.libertybans.core.uuid.ServerType;
 import space.arim.libertybans.env.standalone.CommandDispatch;
 import space.arim.libertybans.env.standalone.ConsoleAudience;
 import space.arim.libertybans.env.standalone.ConsoleAudienceToLogger;
@@ -42,6 +44,13 @@ public class LibertyWeb {
         if (!dbProvider.get().getVendor().isRemote()) {
             log("You are not using a remote database. The web interface will not work properly using the embedded database.");
         }
+
+        Provider<ServerType> serverTypeProvider = () -> injector.request(ServerType.class);
+        if (serverTypeProvider.get().equals(ServerType.OFFLINE)) {
+            log("We detected that you are using an offline mode server. UUIDs won't be resolved to usernames.");
+            EnvironmentDataHolder.setOfflineMode(true);
+        }
+
     }
 
     public void log(String message) {
@@ -63,4 +72,5 @@ public class LibertyWeb {
     public CommandDispatch getCommandDispatch() {
         return commandDispatch;
     }
+
 }
