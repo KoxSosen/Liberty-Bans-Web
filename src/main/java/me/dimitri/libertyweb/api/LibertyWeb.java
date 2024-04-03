@@ -31,8 +31,7 @@ public class LibertyWeb {
 
         Path dataFolder;
         if (PlatformChecker.isAMinecraftServer()) {
-            dataFolder = Path.of(PlatformChecker.getRootPath().toString());
-            System.out.println(PlatformChecker.getRootPath());
+            dataFolder = Path.of(PlatformChecker.getRootPath().toString() + "/LibertyBans/");
         } else {
             dataFolder = Path.of(System.getProperty("user.dir") + "/LibertyBans/");
         }

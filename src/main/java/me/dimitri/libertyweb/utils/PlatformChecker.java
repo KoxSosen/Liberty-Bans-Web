@@ -29,15 +29,12 @@ public class PlatformChecker {
     // This method checks whether we are in a modded or a Bukkit based environment.
     public static Path checkForResourcesFolder() {
         Path currentPath = Paths.get("").toAbsolutePath();
-        System.out.println(currentPath);
         Path modsPath = currentPath.resolve("mods");
         Path pluginsPath = currentPath.resolve("plugins");
 
         if (Files.exists(modsPath)) {
-            System.out.println(Files.exists(modsPath));
             return modsPath.resolve("LibertyWeb");
         } else if (Files.exists(pluginsPath)) {
-            System.out.println(Files.exists(pluginsPath));
             return pluginsPath.resolve("LibertyWeb");
         }
         return null;
