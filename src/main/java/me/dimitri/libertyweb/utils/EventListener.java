@@ -6,11 +6,15 @@ import jakarta.inject.Inject;
 import me.dimitri.libertyweb.api.LibertyWeb;
 
 public class EventListener {
-    private final LibertyWeb libertyWeb;
+    public static LibertyWeb getLibertyWeb() {
+        return libertyWeb;
+    }
+
+    private static LibertyWeb libertyWeb;
 
     @Inject
     public EventListener(LibertyWeb libertyWeb) {
-        this.libertyWeb = libertyWeb;
+        EventListener.libertyWeb = libertyWeb;
     }
 
     @io.micronaut.runtime.event.annotation.EventListener

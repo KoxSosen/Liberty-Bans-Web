@@ -59,14 +59,7 @@ public class Application {
 
         if (PlatformChecker.isAMinecraftServer()) {
             System.setProperty("micronaut.config.files", PlatformChecker.getRootPath().toString() + "/config.yml");
-
-            // We need to avoid blocking the main thread.
-            Thread thread = new Thread("LibertyWeb-Server-Thread") {
-                public void run(){
-                    Micronaut.build(args).banner(false).start();
-                }
-            };
-            thread.start();
+            Micronaut.build(args).banner(false).start();
         } else {
             System.setProperty("micronaut.config.files", "config.yml");
             Micronaut.build(args).banner(false).start();
