@@ -15,15 +15,17 @@ public class Application {
 
     public static void main(String[] args) {
         StartupFiles startupFiles;
-        PlatformChecker platformChecker = new PlatformChecker();
 
-        platformChecker.checkIfIsAMinecraftServer();
+        PlatformChecker.checkIfIsAMinecraftServer();
 
-        if (platformChecker.isAMinecraftServer()) {
-            Path resourcesPath = platformChecker.checkForResourcesFolder();
+        if (PlatformChecker.isAMinecraftServer()) {
+            Path resourcesPath = PlatformChecker.checkForResourcesFolder();
             if (resourcesPath != null) {
+                PlatformChecker.setRootPath(resourcesPath);
                 startupFiles = new StartupFiles(resourcesPath);
-                startupFiles.createPlatformFolder();
+                if (startupFiles.createPlatformFolder()) {
+                    log.info(" Platform specific folders are created.");
+                }
             } else {
                 log.info(" Detected a server platform, but unable to determine resources folder.");
                 log.info(" Starting normally, but the LibertyWeb resources may not be in the correct folder.");
@@ -37,8 +39,10 @@ public class Application {
             if (startupFiles.createConfig()) {
                 log.info(" config.yml created, please configure your Liberty Web application there");
                 log.info(" Make sure to copy your LibertyBans plugin folder to the same directory as Liberty Web");
-                System.exit(0);
-                return;
+                if (!PlatformChecker.isAMinecraftServer()) {
+                    System.exit(0);
+                    return;
+                }
             }
             if (startupFiles.createFrontend()) {
                 log.info(" Frontend files for the website have been created, if you wish to edit");
@@ -52,7 +56,20 @@ public class Application {
             System.exit(0);
             return;
         }
-        System.setProperty("micronaut.config.files", "config.yml");
-        Micronaut.build(args).banner(false).start();
+
+        if (PlatformChecker.isAMinecraftServer()) {
+            System.setProperty("micronaut.config.files", PlatformChecker.getRootPath().toString() + "/config.yml");
+
+            // We need to avoid blocking the main thread.
+            Thread thread = new Thread("LibertyWeb-Server-Thread") {
+                public void run(){
+                    Micronaut.build(args).banner(false).start();
+                }
+            };
+            thread.start();
+        } else {
+            System.setProperty("micronaut.config.files", "config.yml");
+            Micronaut.build(args).banner(false).start();
+        }
     }
 }

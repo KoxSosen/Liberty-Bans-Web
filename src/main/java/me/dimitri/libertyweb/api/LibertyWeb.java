@@ -2,6 +2,7 @@ package me.dimitri.libertyweb.api;
 
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
+import me.dimitri.libertyweb.utils.PlatformChecker;
 import net.kyori.adventure.audience.MessageType;
 import net.kyori.adventure.text.Component;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,15 @@ public class LibertyWeb {
     private final CommandDispatch commandDispatch;
 
     public LibertyWeb() {
-        Path dataFolder = Path.of(System.getProperty("user.dir") + "/LibertyBans/");
+
+        Path dataFolder;
+        if (PlatformChecker.isAMinecraftServer()) {
+            dataFolder = Path.of(PlatformChecker.getRootPath().toString());
+            System.out.println(PlatformChecker.getRootPath());
+        } else {
+            dataFolder = Path.of(System.getProperty("user.dir") + "/LibertyBans/");
+        }
+
         consoleAudience = new ConsoleAudienceToLogger(LoggerFactory.getLogger(LibertyWeb.class));
 
         injector = new StandaloneLauncher(dataFolder, new DefaultOmnibus())

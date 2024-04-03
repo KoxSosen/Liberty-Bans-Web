@@ -13,7 +13,6 @@ public class StartupFiles {
     private final Path rootPath;
 
     public StartupFiles(Path rootPath) {
-
         this.rootPath = rootPath;
     }
 
@@ -54,17 +53,26 @@ public class StartupFiles {
     }
 
     public void createPlatformFolder() throws FileWorkerException {
-        try {
-            Files.createDirectory(rootPath.resolve("/LibertyWeb"));
-        } catch (IOException e) {
-            throw new FileWorkerException("Unable to unzip " + file, e);
+        if (Files.exists(rootPath)) {
+            return false;
+        } else {
+            try {
+                Files.createDirectory(rootPath);
+                return true;
+            } catch (IOException e) {
+                throw new FileWorkerException("Unable to unzip " + file, e);
+            }
         }
     }
 
     private void unzip(File file) throws FileWorkerException {
         try {
             ZipFile zipFile = new ZipFile(file);
-            zipFile.extractAll(getFilePath());
+            if (PlatformChecker.isAMinecraftServer()) {
+                zipFile.extractAll(rootPath.toString());
+            } else {
+                zipFile.extractAll(getFilePath());
+            }
             file.delete();
         } catch (ZipException | URISyntaxException e) {
             throw new FileWorkerException("Unable to unzip " + file, e);

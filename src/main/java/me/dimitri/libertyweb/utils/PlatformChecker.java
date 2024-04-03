@@ -1,41 +1,54 @@
 package me.dimitri.libertyweb.utils;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class PlatformChecker {
-    boolean isAMinecraftServer = false;
+    static boolean isAMinecraftServer = false;
+    static Path rootPath;
 
     // net.minecraft.server.MinecraftServer is traditionally present on vanilla forks/platforms
-    public void checkIfIsAMinecraftServer() {
+    public static void checkIfIsAMinecraftServer() {
         try {
-            Class.forName("net.minecraft.server.MinecraftServer", false, getClass().getClassLoader());
-            isAMinecraftServer = true;
+            Class.forName("net.minecraft.server.MinecraftServer", false, PlatformChecker.class.getClassLoader());
+            setAMinecraftServer(true);
         } catch (ClassNotFoundException e) {
-            isAMinecraftServer = false;
+            setAMinecraftServer(false);
         }
     }
 
-    public boolean isAMinecraftServer() {
+    public static boolean isAMinecraftServer() {
         return isAMinecraftServer;
     }
 
-    public void setAMinecraftServer(boolean AMinecraftServer) {
+    public static void setAMinecraftServer(boolean AMinecraftServer) {
         isAMinecraftServer = AMinecraftServer;
     }
 
     // This method checks whether we are in a modded or a Bukkit based environment.
-    public Path checkForResourcesFolder() {
-        Path modsPath = Path.of(".", "/mods");
-        Path pluginsPath = Path.of(".", "/plugins");
+    public static Path checkForResourcesFolder() {
+        Path currentPath = Paths.get("").toAbsolutePath();
+        System.out.println(currentPath);
+        Path modsPath = currentPath.resolve("mods");
+        Path pluginsPath = currentPath.resolve("plugins");
 
         if (Files.exists(modsPath)) {
-            return modsPath.resolve("/LibertyWeb");
+            System.out.println(Files.exists(modsPath));
+            return modsPath.resolve("LibertyWeb");
         } else if (Files.exists(pluginsPath)) {
-            return pluginsPath.resolve("/LibertyWeb");
+            System.out.println(Files.exists(pluginsPath));
+            return pluginsPath.resolve("LibertyWeb");
         }
         return null;
+    }
+
+    public static Path getRootPath() {
+        return rootPath;
+    }
+
+    public static void setRootPath(Path rootPath) {
+        PlatformChecker.rootPath = rootPath;
     }
 
 

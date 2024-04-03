@@ -1,4 +1,5 @@
-main: me.dimitri.libertyweb.Application
+main: me.dimitri.libertyweb.platforms.BukkitPlatform
 name: LibertyWeb
 version: 2.1.0
 description: LibertyWeb provides a web interface for punishments given via the LibertyBans plugin.
+api-version: '1.13'

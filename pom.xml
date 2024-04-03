@@ -44,6 +44,13 @@
       <id>central</id>
       <url>https://repo.maven.apache.org/maven2</url>
     </repository>
+
+    <!-- Repositories for platform dependencies. -->
+    <repository>
+      <id>spigot-repo</id>
+      <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+    </repository>
+
   </repositories>
 
   <dependencies>
@@ -97,6 +104,15 @@
       <groupId>org.flywaydb</groupId>
       <artifactId>flyway-mysql</artifactId>
     </dependency>
+
+    <!-- Dependencies for platforms. -->
+    <dependency>
+      <groupId>org.spigotmc</groupId>
+      <artifactId>spigot-api</artifactId>
+      <version>1.20.4-R0.1-SNAPSHOT</version>
+      <scope>provided</scope>
+    </dependency>
+
   </dependencies>
   <build>
     <plugins>
