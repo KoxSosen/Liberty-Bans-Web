@@ -52,7 +52,7 @@ public class StartupFiles {
         return false;
     }
 
-    public void createPlatformFolder() throws FileWorkerException {
+    public boolean createPlatformFolder() throws FileWorkerException {
         if (Files.exists(rootPath)) {
             return false;
         } else {
@@ -60,7 +60,7 @@ public class StartupFiles {
                 Files.createDirectory(rootPath);
                 return true;
             } catch (IOException e) {
-                throw new FileWorkerException("Unable to unzip " + file, e);
+                throw new FileWorkerException("Unable to create platform folder: ", e);
             }
         }
     }

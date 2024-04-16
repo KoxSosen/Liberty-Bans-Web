@@ -1,8 +1,6 @@
 package me.dimitri.libertyweb.platforms;
 
-import jakarta.inject.Inject;
-import me.dimitri.libertyweb.Application;
-import me.dimitri.libertyweb.api.LibertyWeb;
+import me.dimitri.libertyweb.Application;;
 import me.dimitri.libertyweb.utils.EventListener;
 import org.bukkit.plugin.java.JavaPlugin;
 

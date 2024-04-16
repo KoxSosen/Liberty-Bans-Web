@@ -23,8 +23,12 @@ public class Application {
             if (resourcesPath != null) {
                 PlatformChecker.setRootPath(resourcesPath);
                 startupFiles = new StartupFiles(resourcesPath);
-                if (startupFiles.createPlatformFolder()) {
-                    log.info(" Platform specific folders are created.");
+                try {
+                    if (startupFiles.createPlatformFolder()) {
+                        log.info(" Platform specific folders are created.");
+                    }
+                } catch (FileWorkerException e) {
+                    log.error(e.getMessage());
                 }
             } else {
                 log.info(" Detected a server platform, but unable to determine resources folder.");
